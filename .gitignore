@@ -1,4 +1,6 @@
 terraform.
+.terraform
+cloudformation/.terraform/
 *.terraform.lock.hcl
 tf/.terraform
 tf/static/ng-credentials.yaml
@@ -8,3 +10,4 @@ night_shutdown/.terraform
 night_shutdown/secret
 night_shutdown/terraform.tfvars
 *.tfvars
+tf/test
