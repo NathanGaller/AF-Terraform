@@ -1,6 +1,6 @@
 terraform.
 .terraform
-cloudformation/.terraform/
+cloudformation/.terraform
 *.terraform.lock.hcl
 tf/.terraform
 tf/static/ng-credentials.yaml
