@@ -1,0 +1,172 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation Template: Create a VPC and Subnets with custom VPC name'
+
+Parameters:
+  VPCName:
+    Description: 'The name of the VPC'
+    Type: String
+
+  VPCCIDR:
+    Description: 'CIDR block for the VPC'
+    Type: String
+    Default: '10.0.0.0/16'
+
+  PublicSubnet1CIDR:
+    Description: 'CIDR block for the first public subnet'
+    Type: String
+    Default: '10.0.1.0/24'
+
+  PublicSubnet2CIDR:
+    Description: 'CIDR block for the second public subnet'
+    Type: String
+    Default: '10.0.2.0/24'
+
+  PrivateSubnet1CIDR:
+    Description: 'CIDR block for the first private subnet'
+    Type: String
+    Default: '10.0.3.0/24'
+
+  PrivateSubnet2CIDR:
+    Description: 'CIDR block for the second private subnet'
+    Type: String
+    Default: '10.0.4.0/24'
+
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref VPCName
+
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-IGW'
+
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-Public-RT'
+
+  PrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-Private-RT'
+
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-Public-Subnet1'
+    DependsOn:
+      - VPCGatewayAttachment
+  
+  PublicSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-Public-Subnet2'
+    DependsOn:
+      - VPCGatewayAttachment
+
+  PrivateSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-Private-Subnet1'
+          
+  PrivateSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${VPCName}-Private-Subnet2'
+
+  PublicSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref InternetGateway
+
+Outputs:
+  VPCId:
+    Description: 'The VPC ID'
+    Value: !Ref VPC
+
+  PublicSubnet1Id:
+    Description: 'The Public Subnet1 ID'
+    Value: !Ref PublicSubnet1
+
+  PublicSubnet2Id:
+    Description: 'The Public Subnet2 ID'
+    Value: !Ref PublicSubnet2
+
+  PrivateSubnet1Id:
+    Description: 'The Private Subnet1 ID'
+    Value: !Ref PrivateSubnet1
+
+  PrivateSubnet2Id:
+    Description: 'The Private Subnet2 ID'
+    Value: !Ref PrivateSubnet2

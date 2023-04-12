@@ -1,0 +1,12 @@
+controller:
+  service:
+    externalTrafficPolicy: "Local"
+    annotations:
+      # AWS Load Balancer Controller Annotations
+      service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp # or 'ssl'
+      service.beta.kubernetes.io/aws-load-balancer-attributes: load_balancing.cross_zone.enabled=true
+      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: '60'
+      service.beta.kubernetes.io/aws-load-balancer-type: 'external'
+      service.beta.kubernetes.io/aws-load-balancer-scheme: 'internet-facing' # or 'internal'
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: 'ip'
+      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:052911266688:certificate/1e581bef-18c4-4fc0-a121-a12dd74c2da4
